@@ -2,11 +2,12 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <gl/glut.h>
 
 using namespace std;
-
+typedef glm::u8vec3 Color;
 class EdgeElement
 {
 public:
@@ -17,26 +18,34 @@ public:
 		dy--;
 		x += dx;
 	}
-	inline bool operator<(const EdgeElement e)
+	bool operator<(const EdgeElement& e)
 	{
 		return x < e.x;
+	}
+	bool operator>(const EdgeElement& e)
+	{
+		return x > e.x;
+	}
+	bool operator==(const EdgeElement& e)
+	{
+		return x == e.x;
 	}
 	~EdgeElement() {}
 	float x;
 	int face_id;
 	int dy;
+	float dx;
 private:
 	float ymax;
-	float dx;
 };
 
 class TriangleElements
 {
 public:
-	TriangleElements(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, int face_id, glm::vec3 _color);
+	TriangleElements(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, int face_id, Color _color);
 	TriangleElements() {}
 	~TriangleElements() {}
-	inline const glm::vec3& getColor() 
+	inline const Color& getColor()
 	{
 		return color;
 	}
@@ -50,7 +59,7 @@ private:
 	float a, b, c, d;
 	int face_id;
 	//int dy;
-	glm::vec3 color;
+	Color color;
 };
 
 class EdgeRow
@@ -60,6 +69,7 @@ public:
 	~EdgeRow() {};
 	void clear() { edge_row.clear(); }
 	bool empty() { return edge_row.empty(); }
+	inline void reset() { iter = edge_row.begin(); }
 	inline list<EdgeElement>::iterator getE()
 	{
 		list<EdgeElement>::iterator ret = iter;
@@ -90,6 +100,15 @@ public:
 		{
 			e.update();
 		}
+		edge_row.sort();
+	}
+	void print()
+	{
+		printf("size = %d\n", edge_row.size());
+		for (auto e : edge_row)
+		{
+			printf("e belong to %d face, intersect with %f, remain %d scanline, dx = %f\n", e.face_id, e.x, e.dy, e.dx);
+		}
 	}
 	bool is_update;
 	list<EdgeElement> edge_row;
@@ -98,26 +117,51 @@ private:
 };
 
 
+
+
 class ScanLine
 {
 public:
-	ScanLine(int yres) : ET(yres) { scan_y = yres - 1; };
+	ScanLine(int _yres) : ET(_yres), BG_color(255, 255, 255), yres(_yres){ };
 	~ScanLine() {};
-	void init(glm::vec3 * vertex_buffer, vector<glm::ivec3> &faces, vector<glm::vec3>& colors);
+	void init(glm::vec3 * vertex_buffer, vector<glm::ivec3> &faces, vector<Color>& colors);
 	const int closest_face_id(float x, float y);
-	void scan_one_line(GLubyte * frame_buffer, size_t x_res);
+	void scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_rerender = false);
 	void update_AET();
 	void update_IPL();
 	void scan(GLubyte * frame_buffer, size_t x_res);
+	void reset(int _yres)
+	{
+		ET.clear();
+		ET.resize(_yres);
+		yres = _yres;
+	}
+	void printIPL()
+	{
+		for (auto p : IPL)
+		{
+			printf("face: %d\n", p.first);
+		}
+	}
 private:
-	void render_seg(GLubyte * frame_buffer, int x1, int x2, const glm::vec3& color);
+	void render_seg(GLubyte * frame_buffer, int x1, int x2, const Color& color);
+	void rerender_seg();
 	void set_PT_flag(list<EdgeElement>::iterator e);
+	inline void clearIPL()
+	{
+		for (auto p : IPL)
+		{
+			p.second->is_in = false;//set IPL to be idle
+		}
+		IPL.clear();
+	}
 	EdgeRow AET;
 	map<int, TriangleElements*> IPL;
 	vector<EdgeRow> ET;
 	vector<TriangleElements> PT;
-	EdgeRow Left;
-	EdgeRow Right;
+	vector<Color> last_color;
+	Color BG_color;
 	int scan_y;
+	int yres;
 };
 

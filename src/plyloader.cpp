@@ -103,9 +103,9 @@ struct colorData
 
 vec3 genRandomColor()
 {
-	float r = rand() / float(RAND_MAX);
-	float g = rand() / float(RAND_MAX);
-	float b = rand() / float(RAND_MAX);
+	float r = rand() % 256;
+	float g = rand() % 256;
+	float b = rand() % 256;
 	return vec3(r, g, b);
 }
 

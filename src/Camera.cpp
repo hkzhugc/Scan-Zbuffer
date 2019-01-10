@@ -33,5 +33,11 @@ glm::vec3 Camera::pspt_prj(glm::vec3 v)
 {
 	glm::vec3 res_v = pspt_prj_mat * glm::vec4(v, 1.0f);
 	res_v.z = v.z;
+	/*if (res_v.x != 0 && res_v.y != 0)
+	{
+		std::cout << "input v : " << v.x << ", " << v.y << ", " << v.z << std::endl;
+		std::cout << "output v : " << res_v.x << ", " << res_v.y << ", " << res_v.z << std::endl;
+		getchar();
+	}*/
 	return res_v;
 }

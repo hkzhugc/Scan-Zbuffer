@@ -21,6 +21,10 @@ public:
 		view_mat = glm::make_mat4(mat_src);
 		//view_mat = glm::translate(view_mat, position);
 	}
+	inline void scale(float scale_fac)
+	{
+		view_mat = glm::scale(view_mat, glm::vec3(scale_fac, scale_fac, scale_fac));
+	}
 	inline void rotate(float angle, glm::vec3 axis)
 	{
 		view_mat = glm::rotate(view_mat, angle, axis);
@@ -39,12 +43,11 @@ public:
 		temp2 = 2.0f * xmax;
 		temp3 = 2.0f * ymax;
 		temp4 = zfar - znear;
-
 		float mat_src[16] = {
-			temp / temp2, 0, 0, 0,
-			0, temp / temp3, 0, 0,
-			0, 0, (-zfar - znear) / temp4, -1.0,
-			0, 0, (-temp * zfar) / temp4, 0
+			1, 0, 0, 0,
+			0, 1, 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
 		};
 		pspt_prj_mat = glm::make_mat4(mat_src);
 	}

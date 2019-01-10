@@ -33,7 +33,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 struct PLYModel {
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> normals;
-    std::vector<glm::vec3> colors;
+    std::vector<glm::u8vec3> colors;
 	std::vector<glm::ivec3> faces;
 	/*glm::vec3 *positions;
 	glm::vec3 *normals;

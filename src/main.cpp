@@ -8,10 +8,13 @@
 void init();
 void display();
 void reshape(GLsizei w, GLsizei h);
+void init2();
+void display2();
+void reshape2(GLsizei w, GLsizei h);
 void keyboard(GLubyte key, GLint x, GLint y);
 void draw_scene();
 float angley = 0;
-float anglex = 2.1;
+float scale = 1.1;
 
 Renderer my_render;
 Camera camera;
@@ -21,9 +24,13 @@ int main(int argc, char **argv)
 	PLYModel myModel("../assets/bunny.ply", false, false);
 	my_render.init(&myModel, &camera);
 	glutInit(&argc, argv);
-	init();
-	glutDisplayFunc(display);
-	glutReshapeFunc(reshape);
+	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
+	glutInitWindowPosition(0, 0);
+	glutInitWindowSize(my_render.frame_buffer.w, my_render.frame_buffer.h);
+	glutCreateWindow("Scan-Zbuffer");
+	init2();
+	glutDisplayFunc(display2);
+	glutReshapeFunc(reshape2);
 	glutKeyboardFunc(keyboard);
 	glutMainLoop();
 	return 1;
@@ -78,7 +85,8 @@ void init()
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	my_render.change_view(angley, glm::vec3(0, 0, +0.00));
+	my_render.myPerspective(10, 1, 0.1, 10.0);
+	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
 }
 
 void display()
@@ -92,31 +100,44 @@ void display()
 	glFlush();
 }
 
+void init2()
+{
+	glClearColor(1.0, 1.0, 1.0, 0.0);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, my_render.frame_buffer.w, 0, my_render.frame_buffer.h);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
+}
+
+void display2()
+{
+	glClear(GL_COLOR_BUFFER_BIT);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glRasterPos2i(0, 0);
+	//printf("w = %d, h = %d\n", my_render.frame_buffer.w, my_render.frame_buffer.h);
+	my_render.render();
+	glDrawPixels(my_render.frame_buffer.w, my_render.frame_buffer.h,
+		GL_RGB, GL_UNSIGNED_BYTE, my_render.frame_buffer.getBuffer());
+
+	glutSwapBuffers();
+}
+
 void reshape(GLsizei w, GLsizei h)
 {
-	GLfloat fovy = 30;
-	GLfloat aspect = 1;
-	if (0 == h) { h = 1; }
-	glViewport(0, 0, w, h);
+}
 
-	//glMatrixMode(GL_PROJECTION);
-	//glLoadIdentity();
-
-	fovy = 10;
-	//aspect = (GLfloat)w / h;
-	if (w < h)
-	{
-		fovy = fovy * (GLfloat)h / w;
-	}
-	my_render.myPerspective(fovy, aspect, 0.1, 10.0);
-	//gluPerspective(fovy, aspect, 0.1, 100.0);
-	//glOrtho(, 0.1, 100.0);
-	//glMatrixMode(GL_MODELVIEW);
-	//glLoadIdentity();
+void reshape2(GLsizei w, GLsizei h)
+{
+	my_render.reset(w, h);
+	//init2();
+	display2();
 }
 
 void keyboard(GLubyte key, GLint x, GLint y)
 {
+	bool flag = true;
 	switch (key) {
 
 	case 'a':
@@ -126,17 +147,23 @@ void keyboard(GLubyte key, GLint x, GLint y)
 		angley += 0.1;
 		break;
 	case 'w':
-		anglex -= 1.7;
+		scale += 0.1;
 		break;
 	case 's':
-		anglex += 1.7;
+		scale -= 0.1;
 		break;
 	case 27:
 		exit(0);
 		break;
 	default:
+		flag = false;
 		break;
 	}
-	my_render.change_view(angley, glm::vec3(0, 0, 0));
-	glutPostRedisplay();
+	if (flag)
+	{
+		printf("angley = %f\n", angley);
+		my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
+		glutPostRedisplay();
+		//display2();
+	}
 }
