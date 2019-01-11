@@ -138,7 +138,7 @@ void ScanLine::scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_reren
 	printIPL();
 #endif
 	size_t seg_idx = 0;
-	//is_rerender = false; //disable rerender
+	is_rerender = false; //disable rerender
 	if (!is_rerender)
 		last_color.clear();
 	//printf("rendering line %d, is_rerender = %s e1 == AET.End() : %d\n", scan_y, is_rerender ? "true" : "false", e1 == AET.End());
@@ -158,8 +158,8 @@ void ScanLine::scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_reren
 			color =  PT[face_id].getColor();
 		else
 			color =  BG_color;
-		int left_x = std::max(0.f, (*e1).x);
-		int right_x = std::min((float)(x_res - 1), (*e2).x);
+		int left_x = std::min((float)(x_res - 1), std::max(0.f, (*e1).x));
+		int right_x = std::min((float)(x_res - 1), std::max(0.f, (*e2).x));
 		render_seg(frame_buffer, left_x, right_x, color);
 		last_color.push_back(color);
 #ifdef DEBUG_SCAN

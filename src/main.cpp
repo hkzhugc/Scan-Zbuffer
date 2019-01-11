@@ -18,7 +18,7 @@ Camera camera;
 
 int main(int argc, char **argv)
 {
-	PLYModel myModel("../assets/bunny.ply", false, false);
+	PLYModel myModel("../assets/cube2.ply", false, false);
 	my_render.init(&myModel, &camera);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
@@ -50,7 +50,6 @@ void display2()
 	glClear(GL_COLOR_BUFFER_BIT);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glRasterPos2i(0, 0);
-	//printf("w = %d, h = %d\n", my_render.frame_buffer.w, my_render.frame_buffer.h);
 	my_render.render();
 	glDrawPixels(my_render.frame_buffer.w, my_render.frame_buffer.h,
 		GL_RGB, GL_UNSIGNED_BYTE, my_render.frame_buffer.getBuffer());
@@ -62,7 +61,6 @@ void reshape2(GLsizei w, GLsizei h)
 {
 	my_render.reset(w, h);
 	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
-	//init2();
 	display2();
 }
 
@@ -92,9 +90,7 @@ void keyboard(GLubyte key, GLint x, GLint y)
 	}
 	if (flag)
 	{
-		printf("angley = %f\n", angley);
 		my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
 		glutPostRedisplay();
-		//display2();
 	}
 }
