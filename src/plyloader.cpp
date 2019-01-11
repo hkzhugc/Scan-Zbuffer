@@ -312,7 +312,7 @@ PLYModel::PLYModel(const char* filename, bool isNormal, bool isColor) {
 		float temp[5];
 		//inputPly.read((char *)&Value, sizeof(Value));
 		
-		for (int i = 0; i < 5; i++)
+		for (int i = 0; i < 3; i++)
 		{
 			inputPly >> temp[i];
 		}
@@ -322,7 +322,7 @@ PLYModel::PLYModel(const char* filename, bool isNormal, bool isColor) {
 		
 		for (long int i = 1; i < vertexCount; i++) 
 		{
-			for (int i = 0; i < 5; i++)
+			for (int i = 0; i < 3; i++)
 			{
 				inputPly >> temp[i];
 			}

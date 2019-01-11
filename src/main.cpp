@@ -5,15 +5,12 @@
 #include "Renderer.h"
 #include "Camera.h"
 
-void init();
-void display();
-void reshape(GLsizei w, GLsizei h);
 void init2();
 void display2();
 void reshape2(GLsizei w, GLsizei h);
 void keyboard(GLubyte key, GLint x, GLint y);
 void draw_scene();
-float angley = 0;
+float angley = 0.0;
 float scale = 1.1;
 
 Renderer my_render;
@@ -36,69 +33,6 @@ int main(int argc, char **argv)
 	return 1;
 }
 
-
-void draw_scene()
-{
-	glColor3f(0, 0, 1);
-	glBegin(GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, 0, 1000);
-	glEnd();
-
-	glColor3f(0, 1, 0);
-	glBegin(GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(0, 1000, 0);
-	glEnd();
-
-	glColor3f(1, 0, 0);
-	glBegin(GL_LINES);
-	glVertex3f(0, 0, 0);
-	glVertex3f(1000, 0, 0);
-	glEnd();
-}
-
-void init()
-{
-	glutInitDisplayMode(GLUT_RGB | GLUT_SINGLE | GLUT_DEPTH);
-	glutInitWindowSize(600, 600);
-	glutInitWindowPosition(0, 0);
-	glutCreateWindow("Scan-Zbuffer");
-	glClearColor(1.0, 1.0, 1.0, 0.0);
-	glShadeModel(GL_SMOOTH);
-	glPolygonMode(GL_FRONT, GL_FILL);
-	glPolygonMode(GL_BACK, GL_FILL);
-
-	glEnable(GL_DEPTH_TEST);
-
-	glEnable(GL_AUTO_NORMAL);
-	glEnable(GL_NORMALIZE);
-
-	GLfloat AmbientLight[4] = { 1, 1, 1, 1 };
-	GLfloat light_position[] = { 5, 50, 50, 1 };
-	GLfloat mat_diffuse[] = { 0.85f, 0.65f, 0.2f, 1.0f };
-
-	glLightfv(GL_LIGHT0, GL_AMBIENT, AmbientLight);
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
-	glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, mat_diffuse);
-	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	my_render.myPerspective(10, 1, 0.1, 10.0);
-	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
-}
-
-void display()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	glPushMatrix();
-	glTranslatef(0, 0, 0);
-	my_render.render_face();
-
-	glPopMatrix();
-	glFlush();
-}
 
 void init2()
 {
@@ -124,13 +58,10 @@ void display2()
 	glutSwapBuffers();
 }
 
-void reshape(GLsizei w, GLsizei h)
-{
-}
-
 void reshape2(GLsizei w, GLsizei h)
 {
 	my_render.reset(w, h);
+	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
 	//init2();
 	display2();
 }

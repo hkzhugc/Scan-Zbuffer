@@ -41,6 +41,7 @@ public:
 	{
 		frame_buffer.reset(_w, _h);
 		scan_line.reset(_h);
+		is_change = true;
 	}
 	FrameBuffer frame_buffer;
 private:
@@ -54,7 +55,5 @@ private:
 	//PLYModel* m_model;
 };
 
-void defalut_display_func();
-void defalut_reshape_func(int width, int height);
 
 

@@ -44,10 +44,10 @@ public:
 		temp3 = 2.0f * ymax;
 		temp4 = zfar - znear;
 		float mat_src[16] = {
-			1, 0, 0, 0,
-			0, 1, 0, 0,
-			0, 0, 1, 0,
-			0, 0, 0, 1
+			temp / temp2, 0, 0, 0,
+			0, temp / temp3, 0, 0,
+			0, 0, (-zfar - znear) / temp4, -1,
+			0, 0, (-temp * zfar) / temp4, 0
 		};
 		pspt_prj_mat = glm::make_mat4(mat_src);
 	}

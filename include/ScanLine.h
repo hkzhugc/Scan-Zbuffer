@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <gl/glut.h>
 
+//#define DEBUG_SCAN
+//#define PRINT_IPL
 using namespace std;
 typedef glm::u8vec3 Color;
 class EdgeElement
@@ -47,12 +49,18 @@ public:
 	~TriangleElements() {}
 	inline const Color& getColor()
 	{
-		return color;
+		float _c = (c + 1.f) / 2.f;
+		return Color(255 * _c, 255 * _c, 255 * _c);
+		//return color;
 	}
 	inline float getZvalue(float x, float y) 
 	{
-		if (c == 0) return 1; //assert all z should less than zero
-		return -(a * x + b * y + d) / c;
+		if (c == 0) return -FLT_MAX; //assert all z should less than zero
+		return (d - a * x - b * y) / c;
+	}
+	inline void print_normal()
+	{
+		printf("face%d normal = %f %f %f\n", face_id, a, b, c);
 	}
 	bool is_in;
 private:
@@ -86,6 +94,10 @@ public:
 	inline void update()
 	{
 		is_update = false;
+		for (auto &e : edge_row)
+		{
+			e.update();
+		}
 		for (auto it = edge_row.begin(); it != edge_row.end();)
 		{
 			auto tmp = it;
@@ -95,10 +107,6 @@ public:
 				edge_row.erase(tmp);
 				is_update = true;
 			}
-		}
-		for (auto &e : edge_row)
-		{
-			e.update();
 		}
 		edge_row.sort();
 	}
@@ -138,10 +146,14 @@ public:
 	}
 	void printIPL()
 	{
+#ifdef PRINT_IPL
+		printf("\n-----printIPL begin-----\n");
 		for (auto p : IPL)
 		{
 			printf("face: %d\n", p.first);
 		}
+		printf("-----printIPL   end-----\n\n");
+#endif
 	}
 private:
 	void render_seg(GLubyte * frame_buffer, int x1, int x2, const Color& color);
