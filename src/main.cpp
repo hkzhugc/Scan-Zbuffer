@@ -21,10 +21,10 @@ int main(int argc, char **argv)
 	if (argc < 2)
 	{
 		cout << "please enter the ply location" << endl;
-		//return 1;
+		return 1;
 	}
 		
-	PLYModel myModel("../assets/bunny.ply", false, false);
+	PLYModel myModel(argv[1], false, false);
 	my_render.init(&myModel, &camera);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
