@@ -4,37 +4,43 @@
 #include "plyloader.h"
 #include "Renderer.h"
 #include "Camera.h"
+#include <time.h>
 
-void init2();
-void display2();
-void reshape2(GLsizei w, GLsizei h);
+void init();
+void display();
+void reshape(GLsizei w, GLsizei h);
 void keyboard(GLubyte key, GLint x, GLint y);
 void draw_scene();
 float angley = 0.0;
-float scale = 1.1;
 
 Renderer my_render;
 Camera camera;
 
 int main(int argc, char **argv)
 {
-	PLYModel myModel("../assets/cube2.ply", false, false);
+	if (argc < 2)
+	{
+		cout << "please enter the ply location" << endl;
+		//return 1;
+	}
+		
+	PLYModel myModel("../assets/bunny.ply", false, false);
 	my_render.init(&myModel, &camera);
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE);
 	glutInitWindowPosition(0, 0);
 	glutInitWindowSize(my_render.frame_buffer.w, my_render.frame_buffer.h);
 	glutCreateWindow("Scan-Zbuffer");
-	init2();
-	glutDisplayFunc(display2);
-	glutReshapeFunc(reshape2);
+	init();
+	glutDisplayFunc(display);
+	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
 	glutMainLoop();
-	return 1;
+	return 0;
 }
 
 
-void init2()
+void init()
 {
 	glClearColor(1.0, 1.0, 1.0, 0.0);
 	glMatrixMode(GL_PROJECTION);
@@ -42,26 +48,29 @@ void init2()
 	gluOrtho2D(0, my_render.frame_buffer.w, 0, my_render.frame_buffer.h);
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
+	my_render.change_view(angley, glm::vec3(0, 0, 0));
 }
 
-void display2()
+void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glRasterPos2i(0, 0);
+	
+	clock_t start = clock();
 	my_render.render();
 	glDrawPixels(my_render.frame_buffer.w, my_render.frame_buffer.h,
 		GL_RGB, GL_UNSIGNED_BYTE, my_render.frame_buffer.getBuffer());
-
 	glutSwapBuffers();
+	clock_t end = clock();
+	cout << "rendering a frame cost " << difftime(end, start) << " msec" << endl;
 }
 
-void reshape2(GLsizei w, GLsizei h)
+void reshape(GLsizei w, GLsizei h)
 {
 	my_render.reset(w, h);
-	my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
-	display2();
+	my_render.change_view(angley, glm::vec3(0, 0, 0));
+	display();
 }
 
 void keyboard(GLubyte key, GLint x, GLint y)
@@ -75,12 +84,6 @@ void keyboard(GLubyte key, GLint x, GLint y)
 	case 'd':
 		angley += 0.1;
 		break;
-	case 'w':
-		scale += 0.1;
-		break;
-	case 's':
-		scale -= 0.1;
-		break;
 	case 27:
 		exit(0);
 		break;
@@ -90,7 +93,7 @@ void keyboard(GLubyte key, GLint x, GLint y)
 	}
 	if (flag)
 	{
-		my_render.change_view(scale, angley, glm::vec3(0, 0, 0));
+		my_render.change_view(angley, glm::vec3(0, 0, 0));
 		glutPostRedisplay();
 	}
 }

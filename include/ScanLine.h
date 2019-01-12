@@ -53,18 +53,38 @@ public:
 		return Color(255 * _c, 255 * _c, 255 * _c);
 		//return color;
 	}
-	inline float getZvalue(float x, float y) 
+	inline float getZvalue(int x, int y) 
 	{
 		if (c == 0) return -FLT_MAX; //assert all z should less than zero
 		return (d - a * x - b * y) / c;
+	}
+	inline float getZvalue(int x)
+	{
+		if (c == 0) return -FLT_MAX; //assert all z should less than zero
+		return z_scany + a_c * x;
 	}
 	inline void print_normal()
 	{
 		printf("face%d normal = %f %f %f\n", face_id, a, b, c);
 	}
+	inline void update_z(int y)
+	{
+		if (!is_init)
+		{
+			z_scany = d_c + b_c * y;
+			is_init = true;
+		}
+		else
+		{
+			z_scany -= b_c;
+		}
+	}
 	bool is_in;
 private:
 	float a, b, c, d;
+	float d_c, a_c, b_c;
+	float z_scany;
+	int is_init;
 	int face_id;
 	//int dy;
 	Color color;
@@ -93,7 +113,7 @@ public:
 	void insert(EdgeElement e);
 	inline void update()
 	{
-		is_update = false;
+		//is_update = false;
 		for (auto &e : edge_row)
 		{
 			e.update();
@@ -105,7 +125,7 @@ public:
 			if ((*tmp).dy == 0)
 			{
 				edge_row.erase(tmp);
-				is_update = true;
+				//is_update = true;
 			}
 		}
 		edge_row.sort();
@@ -118,7 +138,7 @@ public:
 			printf("e belong to %d face, intersect with %f, remain %d scanline, dx = %f\n", e.face_id, e.x, e.dy, e.dx);
 		}
 	}
-	bool is_update;
+//	bool is_update;
 	list<EdgeElement> edge_row;
 private:
 	list<EdgeElement>::iterator iter;
@@ -135,8 +155,6 @@ public:
 	void init(glm::vec3 * vertex_buffer, vector<glm::ivec3> &faces, vector<Color>& colors);
 	const int closest_face_id(float x, float y);
 	void scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_rerender = false);
-	void update_AET();
-	void update_IPL();
 	void scan(GLubyte * frame_buffer, size_t x_res);
 	void reset(int _yres)
 	{
@@ -157,7 +175,6 @@ public:
 	}
 private:
 	void render_seg(GLubyte * frame_buffer, int x1, int x2, const Color& color);
-	void rerender_seg();
 	void set_PT_flag(list<EdgeElement>::iterator e);
 	inline void clearIPL()
 	{

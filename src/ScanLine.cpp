@@ -36,6 +36,10 @@ TriangleElements::TriangleElements(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3, int
 	normal = glm::normalize(normal);
 	a = normal.x; b = normal.y; c = normal.z;
 	d = (a * p1.x + b * p1.y + c * p1.z);
+	d_c = c != 0 ? d / c : 0;
+	a_c = c != 0 ? -a / c : 0;
+	b_c = c != 0 ? -b / c : 0;
+	is_init = false;
 }
 
 void EdgeRow::insert(EdgeElement e)
@@ -51,7 +55,7 @@ void EdgeRow::insert(EdgeElement e)
 	edge_row.push_back(e);
 }
 
-
+//init the data structure 
 void ScanLine::init(glm::vec3 * vertex_buffer, vector<glm::ivec3>& faces, vector<Color>& colors)
 {
 	size_t face_id = 0;
@@ -103,6 +107,28 @@ void ScanLine::init(glm::vec3 * vertex_buffer, vector<glm::ivec3>& faces, vector
 	//printf("push %d edges\n");
 }
 
+//manage IPL and PT
+void ScanLine::set_PT_flag(list<EdgeElement>::iterator e)
+{
+	if (e == AET.End())
+		return;
+	int face_id = (*e).face_id;
+	PT[face_id].is_in = !PT[face_id].is_in;
+	if (PT[face_id].is_in)
+	{
+		IPL[face_id] = &PT[face_id];
+		//IPL[face_id]->update_z(scan_y);
+	}
+	//it means that e is the second edge
+	else
+	{
+		auto it = IPL.find(face_id);
+		assert(it != IPL.end());
+		IPL.erase(it);
+	}
+}
+
+//get the closest_face_id
 const int ScanLine::closest_face_id(float x, float y)
 {
 	float max_z = -FLT_MAX;
@@ -111,8 +137,10 @@ const int ScanLine::closest_face_id(float x, float y)
 	for (auto pair : IPL)
 	{
 		float z = pair.second->getZvalue(x, y);
+		//float z = pair.second->getZvalue(x);
 #ifdef DEBUG_SCAN
-		printf("face %d  z: %f, max_z = %f\n", pair.first, z, max_z);
+		printf("face %d  z: %f, az = %f\n", pair.first, z, az);
+		getchar();
 #endif
 		if (z > max_z){
 			face_id = pair.first;
@@ -122,6 +150,18 @@ const int ScanLine::closest_face_id(float x, float y)
 			
 	}
 	return face_id;
+}
+
+//rendering a segement of framebuffer
+void ScanLine::render_seg(GLubyte * frame_buffer, int x1, int x2, const Color& color)
+{
+	for (int i = x1; i < x2; i++)
+	{
+		GLubyte* frame = &frame_buffer[3 * i];
+		frame[0] = color[0];
+		frame[1] = color[1];
+		frame[2] = color[2];
+	}
 }
 
 //scan 1 line, and set the frame_buffer
@@ -137,21 +177,10 @@ void ScanLine::scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_reren
 	AET.print();
 	printIPL();
 #endif
-	size_t seg_idx = 0;
-	is_rerender = false; //disable rerender
-	if (!is_rerender)
-		last_color.clear();
-	//printf("rendering line %d, is_rerender = %s e1 == AET.End() : %d\n", scan_y, is_rerender ? "true" : "false", e1 == AET.End());
 	for (auto e2 = AET.getE(); e2 != AET.End();)
 	{
-		if ((*e1).x > (*e2).x)
-			printf("wrong at line : %d\n", scan_y);
 		float x = ((*e1).x + (*e2).x) / 2;
 		int face_id = closest_face_id(x, scan_y);
-		if (is_rerender)
-		{
-			render_seg(frame_buffer, (*e1).x, (*e2).x, last_color[seg_idx++]);
-		}
 		Color color;
 		
 		if(face_id >= 0)
@@ -161,11 +190,9 @@ void ScanLine::scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_reren
 		int left_x = std::min((float)(x_res - 1), std::max(0.f, (*e1).x));
 		int right_x = std::min((float)(x_res - 1), std::max(0.f, (*e2).x));
 		render_seg(frame_buffer, left_x, right_x, color);
-		last_color.push_back(color);
 #ifdef DEBUG_SCAN
 		printf("face_id = %d, render(%d => %d, %d => %d) color = (%d, %d, %d)\n", face_id, (int)(*e1).x, (*e1).face_id, (int)(*e2).x, (*e2).face_id, color[0], color[1], color[2]);
 #endif
-		//if e2 face is in, that means we are leaving the triangle
 		e1 = e2;
 		e2 = AET.getE();
 		set_PT_flag(e1);
@@ -173,29 +200,9 @@ void ScanLine::scan_one_line(GLubyte * frame_buffer, size_t x_res, bool is_reren
 		printIPL();
 #endif
 	}
-	if (is_rerender && seg_idx != last_color.size())
-		printf("wrong at rerender\n");
 #ifdef DEBUG_SCAN
 	getchar();
 #endif
-}
-
-//after scan line scan_y, update the AET, including adding new edges and remove the edge
-void ScanLine::update_AET()
-{
-	AET.update();
-}
-
-void ScanLine::update_IPL()
-{
-	for (auto it = IPL.begin(); it != IPL.end(); ++it)
-	{
-
-		if (!PT[(*it).first].is_in)
-		{
-			IPL.erase(it);
-		}
-	}
 }
 
 void ScanLine::scan(GLubyte * frame_buffer, size_t x_res)
@@ -214,43 +221,9 @@ void ScanLine::scan(GLubyte * frame_buffer, size_t x_res)
 			}
 		}
 		GLubyte * frame_buffer_line = &frame_buffer[3 * scan_y * x_res];
-		bool isNewAPT = (!ET[scan_y].empty() || AET.is_update);
-		scan_one_line(frame_buffer_line, x_res, !isNewAPT);
+		scan_one_line(frame_buffer_line, x_res);
 		AET.update();
 	}
 }
 
-void ScanLine::render_seg(GLubyte * frame_buffer, int x1, int x2, const Color& color)
-{
-	for (int i = x1; i < x2; i++)
-	{
-		GLubyte* frame = &frame_buffer[3 * i];
-		frame[0] = color[0];
-		frame[1] = color[1];
-		frame[2] = color[2];
-	}
-}
 
-void ScanLine::rerender_seg()
-{
-
-}
-
-void ScanLine::set_PT_flag(list<EdgeElement>::iterator e)
-{
-	if (e == AET.End())
-		return;
-	int face_id = (*e).face_id;
-	PT[face_id].is_in = !PT[face_id].is_in;
-	if (PT[face_id].is_in)
-	{
-		IPL[face_id] = &PT[face_id];
-	}
-	//it means that e is the second edge
-	else
-	{
-		auto it = IPL.find(face_id);
-		assert(it != IPL.end());
-		IPL.erase(it);
-	}
-}

@@ -29,9 +29,7 @@ public:
 	Renderer();
 	~Renderer();
 	void init(PLYModel* m, Camera * c);
-	void setDisplayFunc(void(*func)(void)) { display_func = func; }
-	void setReshapeFunc(void(*func)(int width, int height)) { reshape_func = func; }
-	void change_view(float scale = 1, float angle = 0.0f, glm::vec3 position = glm::vec3(0, 0, 0), glm::vec3 view_dir = glm::vec3(0, 0, 0), glm::vec3 up = glm::vec3(0, 0, 0));
+	void change_view(float angle = 0.0f, glm::vec3 position = glm::vec3(0, 0, 0), glm::vec3 view_dir = glm::vec3(0, 0, 0), glm::vec3 up = glm::vec3(0, 0, 0));
 	void myPerspective(float fovy, float aspect, float znear, float zfar);
 	void render();
 	void reset(int _w, int _h)
@@ -42,8 +40,6 @@ public:
 	}
 	FrameBuffer frame_buffer;
 private:
-	void(*display_func) (void);// store the display_func
-	void(*reshape_func) (int width, int height);
 	glm::vec3 * vertex_buffer;
 	Camera * camera_ptr;
 	PLYModel* m_model;

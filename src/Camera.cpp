@@ -1,15 +1,6 @@
 #include "Camera.h"
 #include <iostream>
 
-Camera::Camera()
-{
-}
-
-
-Camera::~Camera()
-{
-}
-
 glm::vec3 Camera::transform(glm::vec3 v)
 {
 	/*

@@ -3,8 +3,6 @@
 
 Renderer::Renderer() : frame_buffer(RES, RES), scan_line(RES)
 {
-	display_func = nullptr;
-	reshape_func = nullptr;
 	m_model = nullptr;
 	vertex_buffer = nullptr;
 }
@@ -16,14 +14,14 @@ Renderer::~Renderer()
 		delete[] vertex_buffer;
 }
 
-void Renderer::change_view(float scale, float angle, glm::vec3 position, glm::vec3 view_dir, glm::vec3 up)
+void Renderer::change_view(float angle, glm::vec3 position, glm::vec3 view_dir, glm::vec3 up)
 {
 	//position.x = m_model->center.x;
 	//position.y = m_model->center.y;
 	//position.z = m_model->center.z;
 
 	//scale = RES / std::fmax(std::fmax(m_model->max.x, m_model->max.y), m_model->max.z);
-	scale = std::fmin(frame_buffer.w / m_model->max.x, frame_buffer.h / m_model->max.y);
+	float scale = std::fmin(frame_buffer.w / m_model->max.x, frame_buffer.h / m_model->max.y);
 	if (vertex_buffer == nullptr)
 		vertex_buffer = new glm::vec3[m_model->vertexCount];
 	camera_ptr->set_camera();
